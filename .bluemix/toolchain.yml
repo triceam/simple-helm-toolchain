@@ -78,7 +78,7 @@ services:
           PROD_CLUSTER_NAME: '{{form.pipeline.parameters.prod-cluster-name}}'
           PROD_CLUSTER_NAMESPACE: '{{form.pipeline.parameters.prod-cluster-namespace}}'
         execute: false
-  iac_build:
+  build:
     service_id: pipeline-iac
     parameters:
       services:

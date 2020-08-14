@@ -27,13 +27,25 @@ toolchain:
     getting_started:
      $ref: "#/messages/template.gettingStarted"
 services:
+  terraform_repo:
+    service_id: >
+      $env.source_provider ? $env.source_provider : 'hostedgit'
+    parameters:
+      repo_name: >
+        $env.toolchainName ? '{{toolchainName}}-terraform' :
+          'hello-helm-{{timestamp}}-terraform'
+      repo_url: 'https://github.com/triceam/cluster'
+      source_repo_url: 'https://github.com/triceam/cluster'
+      type: 'clone'
+      has_issues: true
+      enable_traceability: true
   repo:
     service_id: >
       $env.source_provider ? $env.source_provider : 'hostedgit'
     parameters:
       repo_name: >
-        $env.toolchainName ? '{{toolchainName}}' :
-          'hello-helm-{{timestamp}}'
+        $env.toolchainName ? '{{toolchainName}}-source' :
+          'hello-helm-{{timestamp}}-source'
       repo_url: >
         $env.type === 'link' ? $env.app_repo :
           $env.sourceZipUrl ? '{{sourceZipUrl}}' :
@@ -50,7 +62,7 @@ services:
     parameters:
       services:
         - repo
-      name: '{{services.repo.parameters.repo_name}}'
+      name: '{{services.repo.parameters.repo_name}}-app-build'
       ui-pipeline: true
       configuration:
         content:
@@ -65,6 +77,21 @@ services:
           PROD_RESOURCE_GROUP: '{{form.pipeline.parameters.prod-resource-group}}'
           PROD_CLUSTER_NAME: '{{form.pipeline.parameters.prod-cluster-name}}'
           PROD_CLUSTER_NAMESPACE: '{{form.pipeline.parameters.prod-cluster-namespace}}'
+        execute: false
+    service_id: pipeline
+    parameters:
+      services:
+        - repo
+      name: '{{services.repo.parameters.repo_name}}-terraform'
+      ui-pipeline: true
+      configuration:
+        content:
+          $text: terraform-pipeline.yml
+        env:
+          GIT_REPO: terraform_repo
+          API_KEY: '{{form.pipeline.parameters.api-key}}'
+          APP_NAME: '{{form.pipeline.parameters.app-name}}'
+          REGION_ID: '{{form.pipeline.parameters.prod-region}}'
         execute: true
   webide:
     service_id: orion

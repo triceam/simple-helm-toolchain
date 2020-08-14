@@ -1,0 +1,175 @@
+---
+defaultBaseImageVersion: latest
+properties:
+- name: IBM_CLOUD_API_KEY
+  value: ${API_KEY}
+  type: secure
+stages:
+- name: WORKSPACE_CREATE
+  inputs:
+  - type: git
+    branch: master
+    service: ${GIT_REPO}    
+  triggers:
+  - type: commit
+  properties:
+  - name: WORKSPACE_NAME
+    value: ${APP_NAME}
+    type: text
+  - name: REGION_ID
+    value: ${REGION_ID}
+    type: text
+  jobs:
+  - name: Create workspace
+    type: builder
+    artifact_dir: ''
+    build_type: shell
+    script: |+
+      #!/bin/bash
+      # set -x
+
+
+      # force login (required by schematics cli)
+      ibmcloud login --apikey $API_KEY -a "https://cloud.ibm.com" --no-region
+
+
+      cat > "workspace.json" << EOL
+      {
+        "name": "${WORKSPACE_NAME}",
+        "type": [
+          "terraform_v0.11"
+        ],
+        "location": "${REGION_ID}",
+        "description": "Schematics workspace for terraform pipeline, created by DevOps.",
+        "tags": [],
+        "template_repo": {
+          "url": "${GIT_REPO}"
+        }
+      }
+      EOL
+
+      ibmcloud terraform workspace new --file workspace.json
+
+      exit 1;
+
+- name: PLAN
+  inputs:
+  - type: job
+    stage: UPDATE
+    job: "Update Workspace"
+  triggers:
+  - type: stage
+  jobs:
+  - name: "Terraform Plan"
+    type: builder
+    artifact_dir: ''
+    build_type: shell
+    script: |
+      #!/bin/bash
+      # force login (required by schematics cli)
+      ibmcloud login --apikey $API_KEY -a "https://cloud.ibm.com" --no-region
+      
+      # run terraform plan
+      echo "ibmcloud terraform plan --id $WORKSPACE_ID"
+      ACTIVITY=$(ibmcloud terraform plan -id $WORKSPACE_ID --json)
+      # get rid of trailing "OK" if found
+      if [[ $ACTIVITY == *OK ]]; then
+        ACTIVITY=${ACTIVITY%??}
+      fi
+      ACTIVITY_ID=$(echo $ACTIVITY | jq -r ".activityid")
+      echo "Activity ID   $ACTIVITY_ID"
+      # poll until status is no longer INPROGRESS, or if there is an error
+      while :
+      do
+        STATUS=$(ibmcloud terraform workspace action --id $WORKSPACE_ID --act-id $ACTIVITY_ID --json)
+        
+        RET_VAL=$?
+        if [ $RET_VAL -ne 0 ]; then
+          echo $STATUS
+          exit $RET_VAL
+        else
+          # get rid of trailing "OK" if found
+          if [[ $STATUS == *OK ]]; then
+            STATUS=${STATUS%??}
+          fi
+          STATUS_VALUE=$(echo $STATUS | jq -r ".status")
+          echo "Polling for status: $STATUS_VALUE"
+          if [ "$STATUS_VALUE" = "FAILED" ]; then 
+            ibmcloud terraform logs --id $WORKSPACE_ID --act-id $ACTIVITY_ID
+            exit 1
+          elif [ "$STATUS_VALUE" != "INPROGRESS" ] && [ "$STATUS_VALUE" != "CREATED" ]; then  
+            break
+          fi
+        fi
+        # sleep for 5 seconds, while waiting for completion
+        sleep 5
+      done
+      ibmcloud terraform logs --id $WORKSPACE_ID --act-id $ACTIVITY_ID
+- name: APPLY
+  inputs:
+  - type: job
+    stage: PLAN
+    job: "Terraform Plan"
+  triggers:
+  - type: stage
+  jobs:
+  - name: "Terraform Apply"
+    type: builder
+    artifact_dir: ''
+    build_type: shell
+    script: |
+      #!/bin/bash
+      # force login (required by schematics cli)
+      ibmcloud login --apikey $API_KEY -a "https://cloud.ibm.com" --no-region
+      
+      # run terraform apply
+      echo "ibmcloud terraform apply --id $WORKSPACE_ID --force"
+      ACTIVITY=$(ibmcloud terraform apply -id $WORKSPACE_ID --json --force)
+      # get rid of trailing "OK" if found
+      if [[ $ACTIVITY == *OK ]]; then
+        ACTIVITY=${ACTIVITY%??}
+      fi
+      ACTIVITY_ID=$(echo $ACTIVITY | jq -r ".activityid")
+      echo "Activity ID   $ACTIVITY_ID"
+      # poll until status is no longer INPROGRESS, or if there is an error
+      while :
+      do
+        STATUS=$(ibmcloud terraform workspace action --id $WORKSPACE_ID --act-id $ACTIVITY_ID --json)
+        
+        RET_VAL=$?
+        if [ $RET_VAL -ne 0 ]; then
+          echo $STATUS
+          exit $RET_VAL
+        else
+          # get rid of trailing "OK" if found
+          if [[ $STATUS == *OK ]]; then
+            STATUS=${STATUS%??}
+          fi
+          STATUS_VALUE=$(echo $STATUS | jq -r ".status")
+          echo "Polling for status: $STATUS_VALUE"
+          if [ "$STATUS_VALUE" = "FAILED" ]; then
+            ibmcloud terraform logs --id $WORKSPACE_ID --act-id $ACTIVITY_ID
+            exit 1
+          elif [ "$STATUS_VALUE" != "INPROGRESS" ]; then  
+            break
+          fi
+        fi
+        # sleep for 5 seconds, while waiting for completion
+        sleep 5
+      done
+      ibmcloud terraform logs --id $WORKSPACE_ID --act-id $ACTIVITY_ID
+- name: TEST
+  inputs:
+  - type: job
+    stage: APPLY
+    job: "Terraform Apply"
+  triggers:
+  - type: stage
+  jobs:
+  - name: "Check Health"
+    type: builder
+    artifact_dir: ''
+    build_type: shell
+    script: |
+      #!/bin/bash
+      echo "You can add tests here to ensure that your resources are healthy!"

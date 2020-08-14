@@ -9,8 +9,10 @@ template:
   header: '![](toolchain.svg?localize)'
   icon: secure-lock-helm.svg
   required:
-    - build
+    - app-build
+    - iac-build
     - repo
+    - terraform-repo
   info:
     git url: >
       "[" + $env.repository + "]" +
@@ -27,7 +29,7 @@ toolchain:
     getting_started:
      $ref: "#/messages/template.gettingStarted"
 services:
-  terraform_repo:
+  terraform-repo:
     service_id: >
       $env.source_provider ? $env.source_provider : 'hostedgit'
     parameters:
@@ -57,7 +59,7 @@ services:
       type: $env.type || 'clone'
       has_issues: true
       enable_traceability: true
-  build:
+  app-build:
     service_id: pipeline-app
     parameters:
       services:
@@ -78,7 +80,7 @@ services:
           PROD_CLUSTER_NAME: '{{form.pipeline.parameters.prod-cluster-name}}'
           PROD_CLUSTER_NAMESPACE: '{{form.pipeline.parameters.prod-cluster-namespace}}'
         execute: false
-  build:
+  iac-build:
     service_id: pipeline-iac
     parameters:
       services:

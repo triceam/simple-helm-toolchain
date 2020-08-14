@@ -58,7 +58,7 @@ services:
       has_issues: true
       enable_traceability: true
   build:
-    service_id: pipeline
+    service_id: pipeline-app
     parameters:
       services:
         - repo
@@ -78,7 +78,7 @@ services:
           PROD_CLUSTER_NAME: '{{form.pipeline.parameters.prod-cluster-name}}'
           PROD_CLUSTER_NAMESPACE: '{{form.pipeline.parameters.prod-cluster-namespace}}'
         execute: false
-    service_id: pipeline
+    service_id: pipeline-iac
     parameters:
       services:
         - repo

@@ -60,7 +60,7 @@ services:
       has_issues: true
       enable_traceability: true
   app-build:
-    service_id: pipeline-app
+    service_id: pipeline
     parameters:
       services:
         - repo
@@ -81,7 +81,7 @@ services:
           PROD_CLUSTER_NAMESPACE: '{{form.pipeline.parameters.prod-cluster-namespace}}'
         execute: false
   iac-build:
-    service_id: pipeline-iac
+    service_id: pipeline
     parameters:
       services:
         - terraform_repo

@@ -64,7 +64,7 @@ services:
     parameters:
       services:
         - repo
-      name: '{{services.repo.parameters.repo_name}}-app-build'
+      name: 'Application build'
       ui-pipeline: true
       configuration:
         content:
@@ -84,14 +84,14 @@ services:
     service_id: pipeline
     parameters:
       services:
-        - terraform_repo
-      name: '{{services.repo.parameters.repo_name}}-terraform'
+        - terraform-repo
+      name: 'Terraform'
       ui-pipeline: true
       configuration:
         content:
           $text: terraform-pipeline.yml
         env:
-          GIT_REPO: terraform_repo
+          GIT_REPO: terraform-repo
           API_KEY: '{{form.pipeline.parameters.api-key}}'
           APP_NAME: '{{form.pipeline.parameters.app-name}}'
           REGION_ID: '{{form.pipeline.parameters.prod-region}}'

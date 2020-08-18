@@ -19,6 +19,9 @@ stages:
   - name: REGION_ID
     value: ${REGION_ID}
     type: text
+  - name: RESOURCE_GROUP
+    value: ${RESOURCE_GROUP}
+    type: text
   jobs:
   - name: Create workspace
     type: builder
@@ -30,7 +33,7 @@ stages:
 
 
       # force login (required by schematics cli)
-      ibmcloud login --apikey $API_KEY -a "https://cloud.ibm.com" --no-region
+      ibmcloud login --apikey $IBM_CLOUD_API_KEY -a "https://cloud.ibm.com" --no-region
 
 
       cat > "workspace.json" << EOL
@@ -39,11 +42,12 @@ stages:
         "type": [
           "terraform_v0.11"
         ],
-        "location": "${REGION_ID}",
+        "resource_group": "$RESOURCE_GROUP",
+        "location": "us-south",
         "description": "Schematics workspace for terraform pipeline, created by DevOps.",
         "tags": [],
         "template_repo": {
-          "url": "${GIT_REPO}"
+          "url": "${GIT_URL}"
         }
       }
       EOL

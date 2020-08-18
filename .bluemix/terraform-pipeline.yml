@@ -1,11 +1,11 @@
 ---
 defaultBaseImageVersion: latest
 properties:
-- name: IBM_CLOUD_API_KEY
+- name: API_KEY
   value: ${API_KEY}
   type: secure
 stages:
-- name: WORKSPACE_CREATE
+- name: Create Workspace
   inputs:
   - type: git
     branch: master
@@ -31,10 +31,8 @@ stages:
       #!/bin/bash
       # set -x
 
-
       # force login (required by schematics cli)
-      ibmcloud login --apikey $IBM_CLOUD_API_KEY -a "https://cloud.ibm.com" --no-region
-
+      ibmcloud login --apikey $API_KEY -a "https://cloud.ibm.com" --no-region
 
       cat > "workspace.json" << EOL
       {
@@ -48,19 +46,58 @@ stages:
         "tags": [],
         "template_repo": {
           "url": "${GIT_URL}"
+        },
+          "template_data": [
+            {
+              "folder": ".",
+              "type": "terraform_v0.11",
+              "variablestore": []
+            }
+          ],
+          "githubtoken": "",
+        "status": "DRAFT",
+        "workspace_status_msg": {
+          "status_code": "",
+          "status_msg": ""
+        },
+        "workspace_status": {
+          "frozen": false,
+          "locked": false
         }
       }
       EOL
 
-      ibmcloud terraform workspace new --file workspace.json
+      cat workspace.json
 
-      exit 1;
+      IFS=$'\n'
+      for i in $(ibmcloud terraform workspace new --file workspace.json); do
+          echo "$i"
+          if [[ "$i" == ID* ]]; then
+              IFS=$' '
+              arr=($i)
+              export WORKSPACE_ID=${arr[1]}
+              IFS=$'\n'
+          fi
+      done
+
+      #check if we have a valid workspace id, otherwise fail this stage
+      if [ -z "$WORKSPACE_ID" ]; then
+          exit 1;
+      fi
+
+      echo "Schematics Workspace: $WORKSPACE_ID"
+
+      cat > "workspace.env" << EOL
+      export WORKSPACE_ID=$WORKSPACE_ID
+      EOL
+
+      cat workspace.env
 
 - name: PLAN
   inputs:
   - type: job
     stage: UPDATE
-    job: "Update Workspace"
+    job: "Create Workspace"
   triggers:
   - type: stage
   jobs:
@@ -70,6 +107,10 @@ stages:
     build_type: shell
     script: |
       #!/bin/bash
+
+      # import worskpace id from previous job/stage
+      source workspace.env
+
       # force login (required by schematics cli)
       ibmcloud login --apikey $API_KEY -a "https://cloud.ibm.com" --no-region
       
@@ -123,6 +164,10 @@ stages:
     build_type: shell
     script: |
       #!/bin/bash
+
+      # import worskpace id from previous job/stage
+      source workspace.env
+
       # force login (required by schematics cli)
       ibmcloud login --apikey $API_KEY -a "https://cloud.ibm.com" --no-region
       
@@ -176,4 +221,8 @@ stages:
     build_type: shell
     script: |
       #!/bin/bash
+
+      # import worskpace id from previous job/stage
+      source workspace.env
+      
       echo "You can add tests here to ensure that your resources are healthy!"

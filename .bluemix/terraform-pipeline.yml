@@ -98,7 +98,7 @@ stages:
 - name: PLAN
   inputs:
   - type: job
-    stage: PLAN
+    stage: "Create Workspace"
     job: "Create Workspace"
   triggers:
   - type: stage

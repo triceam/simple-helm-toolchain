@@ -23,7 +23,7 @@ stages:
     value: ${RESOURCE_GROUP}
     type: text
   jobs:
-  - name: Create workspace
+  - name: Create Workspace
     type: builder
     artifact_dir: ''
     build_type: shell
@@ -93,10 +93,12 @@ stages:
 
       cat workspace.env
 
+      #note: This passes the workspace ID to the next stage but does not persist it!  Re-running this pipeline would create another schematics workspace!!!
+
 - name: PLAN
   inputs:
   - type: job
-    stage: UPDATE
+    stage: PLAN
     job: "Create Workspace"
   triggers:
   - type: stage
@@ -224,5 +226,5 @@ stages:
 
       # import worskpace id from previous job/stage
       source workspace.env
-      
+
       echo "You can add tests here to ensure that your resources are healthy!"

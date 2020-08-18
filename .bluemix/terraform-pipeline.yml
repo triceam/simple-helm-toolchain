@@ -63,7 +63,17 @@ stages:
         "workspace_status": {
           "frozen": false,
           "locked": false
-        }
+        },
+        "variablestore": [
+          {
+            "name": "ibmcloud_api_key",
+            "secure": true,
+            "value": "$API_KEY",
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "has_githubtoken": false
       }
       EOL
 

@@ -270,4 +270,4 @@ stages:
       #!/bin/bash
 
       # trigger separate deploy pipeline in this toolchain
-$PIPELINE_TOOLCHAIN_ID
+      $PIPELINE_TOOLCHAIN_ID

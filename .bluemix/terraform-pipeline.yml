@@ -34,6 +34,9 @@ stages:
       # force login (required by schematics cli)
       ibmcloud login --apikey $API_KEY -a "https://cloud.ibm.com" --no-region
 
+      #parse resource group id
+      RESOURCE_GROUP_ID=$(ic resource group $RESOURCE_GROUP --id)
+
       cat > "workspace.json" << EOL
       {
         "name": "${WORKSPACE_NAME}",
@@ -57,7 +60,7 @@ stages:
                 "type": "string"
               },
               {
-                "name": "resource_group",
+                "name": "resource_group_id",
                 "type": "string"
               }],
             "variablestore": [
@@ -69,9 +72,9 @@ stages:
               "description": ""
             },
             {
-              "name": "resource_group",
+              "name": "resource_group_id",
               "secure": false,
-              "value": "$RESOURCE_GROUP",
+              "value": "$RESOURCE_GROUP_ID",
               "type": "string",
               "description": ""
             }],
@@ -267,4 +270,4 @@ stages:
       #!/bin/bash
 
       # trigger separate deploy pipeline in this toolchain
-
+$PIPELINE_TOOLCHAIN_ID

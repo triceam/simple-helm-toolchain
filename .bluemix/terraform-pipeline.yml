@@ -53,16 +53,32 @@ stages:
             "type": "terraform_v0.11",
             "variablestore": []
           },
+          "values_metadata": [
+            {
+              "name": "ibmcloud_api_key",
+              "type": "string"
+            },
+            {
+              "name": "resource_group_id",
+              "type": "string"
+            }],
           "variablestore": [
           {
             "name": "ibmcloud_api_key",
-            "secure": true,
+            "secure": false,
             "value": "$API_KEY",
             "type": "string",
             "description": ""
-          }
+          },
+          {
+            "name": "resource_group_id",
+            "secure": false,
+            "value": "$RESOURCE_GROUP",
+            "type": "string",
+            "description": ""
+          }],
+          "has_githubtoken": false
         ],
-        "githubtoken": "",
         "status": "DRAFT",
         "workspace_status_msg": {
           "status_code": "",
@@ -71,9 +87,7 @@ stages:
         "workspace_status": {
           "frozen": false,
           "locked": false
-        },
-        "values_metadata": []
-      ]
+        }
       }
       EOL
 

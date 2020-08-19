@@ -19,6 +19,9 @@ stages:
   - name: REGION_ID
     value: ${REGION_ID}
     type: text
+  - name: CLUSTER_NAME
+    value: ${CLUSTER_NAME}
+    type: text
   - name: RESOURCE_GROUP
     value: ${RESOURCE_GROUP}
     type: text
@@ -60,6 +63,10 @@ stages:
                 "type": "string"
               },
               {
+                "name": "cluster_name",
+                "type": "string"
+              },
+              {
                 "name": "resource_group_id",
                 "type": "string"
               }],
@@ -68,6 +75,13 @@ stages:
               "name": "ibmcloud_api_key",
               "secure": false,
               "value": "$API_KEY",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "cluster_name",
+              "secure": false,
+              "value": "$CLUSTER_NAME",
               "type": "string",
               "description": ""
             },
@@ -269,5 +283,11 @@ stages:
     script: |
       #!/bin/bash
 
+      # target resource group (needed for devops cli)
+      ibmcloud login --apikey $API_KEY -a "https://cloud.ibm.com" -r $REGION_ID -g $RESOURCE_GROUP
+
       # trigger separate deploy pipeline in this toolchain
-      $PIPELINE_TOOLCHAIN_ID
+      APP_PIPELINE_ID=$(ibmcloud dev $IDS_PROJECT_NAME --json | jq ".items[].services[] | select(.parameters.name==\"Application build\") | .instance_id" -r)
+
+      #run app deploy pipeline
+      ibmcloud dev pipeline-run $APP_PIPELINE_ID

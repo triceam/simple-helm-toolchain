@@ -95,6 +95,7 @@ services:
           API_KEY: '{{form.pipeline.parameters.api-key}}'
           APP_NAME: '{{form.pipeline.parameters.app-name}}'
           REGION_ID: '{{form.pipeline.parameters.prod-region}}'
+          CLUSTER_NAME: '{{form.pipeline.parameters.prod-cluster-name}}'
           RESOURCE_GROUP: '{{form.pipeline.parameters.prod-resource-group}}'
         execute: true
   webide:

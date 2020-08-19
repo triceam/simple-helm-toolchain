@@ -34,6 +34,19 @@ stages:
       # force login (required by schematics cli)
       ibmcloud login --apikey $API_KEY -a "https://cloud.ibm.com" --no-region
 
+      #parse resource group id
+      
+      IFS=$'\n'
+      for i in $(ibmcloud resource group $RESOURCE_GROUP); do
+          echo "$i"
+          if [[ "$i" == ID* ]]; then
+              IFS=$' '
+              arr=($i)
+              export RESOURCE_GROUP_ID=${arr[1]}
+              IFS=$'\n'
+          fi
+      done
+
       cat > "workspace.json" << EOL
       {
         "name": "${WORKSPACE_NAME}",
@@ -51,34 +64,32 @@ stages:
           {
             "folder": ".",
             "type": "terraform_v0.11",
-            "variablestore": []
-          },
-          "values_metadata": [
+            "values_metadata": [
+              {
+                "name": "ibmcloud_api_key",
+                "type": "string"
+              },
+              {
+                "name": "resource_group_id",
+                "type": "string"
+              }],
+            "variablestore": [
             {
               "name": "ibmcloud_api_key",
-              "type": "string"
+              "secure": false,
+              "value": "$API_KEY",
+              "type": "string",
+              "description": ""
             },
             {
               "name": "resource_group_id",
-              "type": "string"
+              "secure": false,
+              "value": "$RESOURCE_GROUP_ID",
+              "type": "string",
+              "description": ""
             }],
-          "variablestore": [
-          {
-            "name": "ibmcloud_api_key",
-            "secure": false,
-            "value": "$API_KEY",
-            "type": "string",
-            "description": ""
-          },
-          {
-            "name": "resource_group_id",
-            "secure": false,
-            "value": "$RESOURCE_GROUP",
-            "type": "string",
-            "description": ""
-          }],
-          "has_githubtoken": false
-        ],
+            "has_githubtoken": false
+        }],
         "status": "DRAFT",
         "workspace_status_msg": {
           "status_code": "",

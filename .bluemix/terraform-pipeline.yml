@@ -64,16 +64,21 @@ stages:
           "frozen": false,
           "locked": false
         },
+        "values_metadata": [
+        {
+          "name": "ibmcloud_api_key",
+          "type": "string"
+        }],
         "variablestore": [
-          {
-            "name": "ibmcloud_api_key",
-            "secure": true,
-            "value": "$API_KEY",
-            "type": "string",
-            "description": ""
-          }
-        ],
-        "has_githubtoken": false
+        {
+          "name": "ibmcloud_api_key",
+          "secure": true,
+          "value": "$API_KEY",
+          "type": "string",
+          "description": ""
+        }
+      ],
+      "has_githubtoken": false
       }
       EOL
 

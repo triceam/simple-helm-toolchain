@@ -197,6 +197,25 @@ stages:
       kubernetes_cluster: ${PROD_CLUSTER_NAME}
     script: |
       #!/bin/bash
+
+      echo "=========================================================="
+      echo "CREATING HELM CHART"
+      if [ -z "${CHART_ROOT}" ]; then CHART_ROOT="chart" ; fi
+      if [ -d ${CHART_ROOT} ]; then
+        echo -e "Looking for chart under /${CHART_ROOT}/<CHART_NAME>"
+        CHART_NAME=$(find ${CHART_ROOT}/. -maxdepth 2 -type d -name '[^.]?*' -printf %f -quit)
+        CHART_PATH=${CHART_ROOT}/${CHART_NAME}
+      fi
+      if [ -z "${CHART_PATH}" ]; then
+        curl -L -O https://github.com/triceam/generic-helm-chart/archive/master.zip > master.zip
+        unzip master.zip
+        mv generic-helm-chart-master/chart chart
+      fi
+
+      
+      export IMAGE_PULL_SECRET_NAME="default-icr-io"
+
+
       # uncomment to debug the script
       # set -x
       # copy the script below into your app code repo (e.g. ./scripts/check_and_deploy_helm3.sh) and 'source' it from your pipeline job

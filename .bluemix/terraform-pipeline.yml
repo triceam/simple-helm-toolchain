@@ -290,11 +290,19 @@ stages:
     script: |
       #!/bin/bash
 
+      # install jq
+      JQ=/usr/bin/jq
+      curl https://stedolan.github.io/jq/download/linux64/jq > $JQ && chmod +x $JQ
+      ls -la $JQ
+
       # target resource group (needed for devops cli)
-      ibmcloud login --apikey $API_KEY -a "https://cloud.ibm.com" -r $PROD_REGION_ID -g $RESOURCE_GROUP
+      ibmcloud login --apikey $API_KEY -a "https://cloud.ibm.com" -r us-south -g $RESOURCE_GROUP
 
       # trigger separate deploy pipeline in this toolchain
-      APP_PIPELINE_ID=$(ibmcloud dev $IDS_PROJECT_NAME --json | jq ".items[].services[] | select(.parameters.name==\"Application build\") | .instance_id" -r)
+      echo 'ibmcloud dev $IDS_PROJECT_NAME --json | jq ".items[].services[] | select(.parameters.name==\"Application build\") | .instance_id" -r'
+      APP_PIPELINE_ID=$(ibmcloud dev toolchain-get $IDS_PROJECT_NAME --json | jq ".items[].services[] | select(.parameters.name==\"Application build\") | .instance_id" -r)
 
       #run app deploy pipeline
+      echo "ibmcloud dev pipeline-run $APP_PIPELINE_ID"
       ibmcloud dev pipeline-run $APP_PIPELINE_ID
+

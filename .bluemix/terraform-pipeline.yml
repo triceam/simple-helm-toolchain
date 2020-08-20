@@ -16,8 +16,8 @@ stages:
   - name: WORKSPACE_NAME
     value: ${APP_NAME}
     type: text
-  - name: REGION_ID
-    value: ${REGION_ID}
+  - name: PROD_REGION_ID
+    value: ${PROD_REGION_ID}
     type: text
   - name: CLUSTER_NAME
     value: ${CLUSTER_NAME}
@@ -275,6 +275,13 @@ stages:
     job: "Check Health"
   triggers:
   - type: stage
+  properties:
+  - name: PROD_REGION_ID
+    value: ${PROD_REGION_ID}
+    type: text
+  - name: RESOURCE_GROUP
+    value: ${RESOURCE_GROUP}
+    type: text
   jobs:
   - name: "Deploy"
     type: builder
@@ -284,7 +291,7 @@ stages:
       #!/bin/bash
 
       # target resource group (needed for devops cli)
-      ibmcloud login --apikey $API_KEY -a "https://cloud.ibm.com" -r $REGION_ID -g $RESOURCE_GROUP
+      ibmcloud login --apikey $API_KEY -a "https://cloud.ibm.com" -r $PROD_REGION_ID -g $RESOURCE_GROUP
 
       # trigger separate deploy pipeline in this toolchain
       APP_PIPELINE_ID=$(ibmcloud dev $IDS_PROJECT_NAME --json | jq ".items[].services[] | select(.parameters.name==\"Application build\") | .instance_id" -r)
